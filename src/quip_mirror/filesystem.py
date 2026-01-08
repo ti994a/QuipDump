@@ -215,6 +215,9 @@ class FileSystemManager:
         # Replace forward slashes specifically (common in Quip titles)
         sanitized = sanitized.replace('/', '-')
         
+        # Replace spaces with hyphens
+        sanitized = sanitized.replace(' ', '-')
+        
         # Remove control characters
         sanitized = ''.join(char for char in sanitized if ord(char) >= 32)
         

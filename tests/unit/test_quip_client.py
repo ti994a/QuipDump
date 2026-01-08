@@ -258,6 +258,7 @@ class TestQuipAPIClient:
         assert len(contents.folders) == 0
         assert len(contents.documents) == 0
         assert contents.is_empty() is True
+        assert contents.folder_name == "Empty Folder"
     
     def test_parse_folder_contents_mixed(self):
         """Test parsing folder contents with mixed items."""

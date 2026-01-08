@@ -51,7 +51,10 @@ class FolderTraverser:
         self._visited_folders.clear()
         
         try:
-            return self._traverse_recursive(root_folder_id, depth=0)
+            hierarchy = self._traverse_recursive(root_folder_id, depth=0)
+            logger.info(f"Completed traversal of '{hierarchy.root_folder.name}' - "
+                       f"found {hierarchy.total_folders} folders and {hierarchy.total_documents} documents")
+            return hierarchy
         except QuipAPIError as e:
             raise TraversalError(f"API error during traversal: {str(e)}") from e
         except Exception as e:
@@ -92,22 +95,17 @@ class FolderTraverser:
         
         try:
             # Get folder contents from API
-            logger.debug(f"Traversing folder {folder_id} at depth {depth}")
             folder_contents = self.client.get_folder_contents(folder_id)
+            folder_name = folder_contents.folder_name or f"Folder {folder_id}"
+            logger.debug(f"Traversing folder '{folder_name}' ({folder_id}) at depth {depth}")
             
-            # Create root folder item (we'll get the name from the API response)
-            # For now, use the folder ID as name - this will be updated when we have folder metadata
+            # Create root folder item using the actual name from the API
             root_item = QuipItem(
                 id=folder_id,
-                name=f"Folder {folder_id}",  # Placeholder name
+                name=folder_name,  # Use actual name from API
                 type="folder",
                 url=f"https://quip-amazon.com/folder/{folder_id}"
             )
-            
-            # Try to get the actual folder name from the first API call
-            # This is a limitation of the current API - we might need folder metadata
-            if hasattr(folder_contents, 'folder_name') and folder_contents.folder_name:
-                root_item.name = folder_contents.folder_name
             
             # Initialize hierarchy
             hierarchy = FolderHierarchy(
@@ -123,14 +121,14 @@ class FolderTraverser:
                     hierarchy.subfolders[subfolder.id] = subfolder_hierarchy
                     
                 except QuipAPIError as e:
-                    logger.error(f"Failed to traverse subfolder {subfolder.id}: {str(e)}")
+                    logger.error(f"Failed to traverse subfolder '{subfolder.name}' ({subfolder.id}): {str(e)}")
                     # Continue with other subfolders instead of failing completely
                     continue
                 except Exception as e:
-                    logger.error(f"Unexpected error traversing subfolder {subfolder.id}: {str(e)}")
+                    logger.error(f"Unexpected error traversing subfolder '{subfolder.name}' ({subfolder.id}): {str(e)}")
                     continue
             
-            logger.debug(f"Completed traversal of folder {folder_id}: "
+            logger.debug(f"Completed traversal of folder '{folder_name}' ({folder_id}): "
                         f"{len(hierarchy.subfolders)} subfolders, {len(hierarchy.documents)} documents")
             
             return hierarchy

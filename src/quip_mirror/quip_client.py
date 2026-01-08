@@ -42,7 +42,7 @@ class QuipAPIClient:
             max_retries: Maximum number of retry attempts
         """
         self.access_token = access_token
-        self.base_url = "https://platform.quip.com/1"
+        self.base_url = "https://platform.quip-amazon.com/1"
         self.timeout = timeout
         
         # Set up session with retry strategy
@@ -253,6 +253,10 @@ class QuipAPIClient:
         folders = []
         documents = []
         
+        # Extract the folder name from the response
+        folder_info = data.get("folder", {})
+        folder_name = folder_info.get("title", "Untitled Folder")
+        
         children = data.get("children", [])
         
         for child in children:
@@ -277,7 +281,7 @@ class QuipAPIClient:
                 documents.append(document_item)
         
         logger.debug(f"Parsed folder contents: {len(folders)} folders, {len(documents)} documents")
-        return FolderContents(folders=folders, documents=documents)
+        return FolderContents(folders=folders, documents=documents, folder_name=folder_name)
     
     def is_folder(self, item: Dict[str, Any]) -> bool:
         """Check if an API response item is a folder."""

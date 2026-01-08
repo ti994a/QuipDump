@@ -68,6 +68,7 @@ class FolderContents:
     
     folders: List[QuipItem] = field(default_factory=list)
     documents: List[QuipItem] = field(default_factory=list)
+    folder_name: Optional[str] = None  # Name of the folder itself
     
     @property
     def total_items(self) -> int:
